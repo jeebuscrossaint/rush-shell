@@ -1,0 +1,5 @@
+init_commands = [
+	"nerdfetch",
+	"color #00FF00"
+	# Add more as you wish
+]
