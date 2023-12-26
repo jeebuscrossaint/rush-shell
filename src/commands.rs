@@ -166,3 +166,27 @@ pub fn time(args: &[String]) {
     println!("Command executed in: {:?}", duration);
     println!("Output: {}", String::from_utf8_lossy(&output.stdout));
 }
+
+use meval::eval_str;
+use regex::Regex;
+
+pub fn math(args: &[String]) {
+    let expression = args.join(" ");
+    let re = Regex::new(r"deg\((.*?)\)").unwrap();
+    let expression = re.replace_all(&expression, |caps: &regex::Captures| {
+        let deg_value: f64 = caps[1].parse().unwrap();
+        let rad_value = deg(deg_value);
+        rad_value.to_string()
+    });
+
+    let res = eval_str(&expression);
+
+    match res {
+        Ok(result) => println!("{}", result),
+        Err(e) => eprintln!("Error: {}", e),
+    }
+}
+
+fn deg(n: f64) -> f64 {
+    n * std::f64::consts::PI / 180.0
+}
