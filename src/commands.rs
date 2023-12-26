@@ -120,18 +120,23 @@ use std::process::Command;
 pub fn run_program(name: &str, args: &[String]) {
     let output = Command::new(name)
         .args(args)
-        .output()
-        .expect("Failed to execute command");
+        .output();
 
-    if !output.stdout.is_empty() {
-        println!("{}", String::from_utf8_lossy(&output.stdout));
-    }
+    match output {
+        Ok(output) => {
+            if !output.stdout.is_empty() {
+                println!("{}", String::from_utf8_lossy(&output.stdout));
+            }
 
-    if !output.stderr.is_empty() {
-        eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+            if !output.stderr.is_empty() {
+                eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+            }
+        },
+        Err(e) => {
+            eprintln!("Failed to execute command: {}", e);
+        }
     }
 }
-
 use rand::Rng;
 use std::cmp::max;
 use std::i32::MAX;
@@ -158,13 +163,19 @@ pub fn time(args: &[String]) {
 
     let output = ProcessCommand::new(&args[0])
         .args(&args[1..])
-        .output()
-        .expect("Failed to execute command");
+        .output();
 
-    let duration = start.elapsed();
+    match output {
+        Ok(output) => {
+            let duration = start.elapsed();
 
-    println!("Command executed in: {:?}", duration);
-    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+            println!("Command executed in: {:?}", duration);
+            println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+        },
+        Err(e) => {
+            eprintln!("Failed to execute command: {}", e);
+        }
+    }
 }
 
 use meval::eval_str;
