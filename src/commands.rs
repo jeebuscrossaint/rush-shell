@@ -132,3 +132,37 @@ pub fn run_program(name: &str, args: &[String]) {
     }
 }
 
+use rand::Rng;
+use std::cmp::max;
+use std::i32::MAX;
+
+pub fn random(args: &[String]) {
+    let mut rng = rand::thread_rng();
+    let lower = args.get(0).and_then(|s| s.parse().ok()).unwrap_or(0);
+    let upper = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(MAX);
+
+    let number = rng.gen_range(lower..max(upper, lower + 1)); // Ensure the upper bound is always greater than the lower bound
+    println!("{}", number);
+}
+
+use std::time::Instant;
+use std::process::Command as ProcessCommand;
+
+pub fn time(args: &[String]) {
+    if args.is_empty() {
+        eprintln!("time: expected command");
+        return;
+    }
+
+    let start = Instant::now();
+
+    let output = ProcessCommand::new(&args[0])
+        .args(&args[1..])
+        .output()
+        .expect("Failed to execute command");
+
+    let duration = start.elapsed();
+
+    println!("Command executed in: {:?}", duration);
+    println!("Output: {}", String::from_utf8_lossy(&output.stdout));
+}

@@ -1,5 +1,5 @@
 use crate::parser::Command;
-use crate::commands::{echo, help, exit, cd, pwd, color, touch, rm, ls, run_program};
+use crate::commands::{echo, help, exit, cd, pwd, color, touch, rm, ls, run_program, random, time};
 
 pub fn execute(command: Command) {
     if command.name.is_empty() {
@@ -16,6 +16,8 @@ pub fn execute(command: Command) {
         "touch" => touch(&command.args),
         "rm" => rm(&command.args),
         "ls" => ls(&command.args),
+        "random" => random(&command.args),
+        "time" => time(&command.args),
         _ => run_program(&command.name, &command.args),
     }
 }
