@@ -1,7 +1,6 @@
 use crate::parser::parse;
 use crate::executor::execute;
 use crate::config::{load_config};
-use std::io::{self, Write};
 use rustyline::completion::{Completer, Pair};
 use rustyline::Context;
 mod parser;
@@ -64,6 +63,8 @@ impl Completer for ShellCompleter {
     }
 }
 
+use rustyline::Editor;
+
 fn main() {
     let config = load_config().unwrap_or_else(|err| {
         eprintln!("Error loading config: {}", err);
@@ -75,13 +76,22 @@ fn main() {
         execute(command);
     }
 
-    loop {
-        print!("$ "); 
-        io::stdout().flush().unwrap(); 
-
-        let mut input = String::new();
-        std::io::stdin().read_line(&mut input).unwrap();
-        let command = parse(&input);
-        execute(command);
+    let mut rl = Editor::<()>::new();
+    if rl.load_history("history.txt").is_err() {
+        println!("No previous history.");
     }
+
+    loop {
+        let readline = rl.readline("$ ");
+        match readline {
+            Ok(line) => {
+                rl.add_history_entry(line.as_str());
+                let command = parse(&line);
+                execute(command);
+            },
+            Err(_) => break,
+        }
+    }
+
+    rl.save_history("history.txt").unwrap();
 }
