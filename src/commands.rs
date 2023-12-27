@@ -115,28 +115,63 @@ pub fn ls(_args: &[String]) {
     }
 }
 
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 pub fn run_program(name: &str, args: &[String]) {
-    let output = Command::new(name)
-        .args(args)
-        .output();
+    let parts: Vec<&str> = name.split('|').map(|s| s.trim()).collect();
+    if parts.len() > 1 {
+        let first_command_parts: Vec<&str> = parts[0].split_whitespace().collect();
+        let output = Command::new(first_command_parts[0])
+            .args(&first_command_parts[1..])
+            .output()
+            .expect("Failed to execute command");
 
-    match output {
-        Ok(output) => {
-            if !output.stdout.is_empty() {
-                println!("{}", String::from_utf8_lossy(&output.stdout));
-            }
+        let output = String::from_utf8_lossy(&output.stdout).into_owned();
 
-            if !output.stderr.is_empty() {
-                eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+        let second_command_parts: Vec<&str> = parts[1].split_whitespace().collect();
+        let output = Command::new(second_command_parts[0])
+            .arg(&output)
+            .args(&second_command_parts[1..])
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to execute command");
+
+        match output.wait_with_output() {
+            Ok(output) => {
+                if !output.stdout.is_empty() {
+                    println!("{}", String::from_utf8_lossy(&output.stdout));
+                }
+
+                if !output.stderr.is_empty() {
+                    eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+                }
+            },
+            Err(e) => {
+                eprintln!("Failed to execute command: {}", e);
             }
-        },
-        Err(e) => {
-            eprintln!("Failed to execute command: {}", e);
+        }
+    } else {
+        let output = Command::new(name)
+            .args(args)
+            .output();
+
+        match output {
+            Ok(output) => {
+                if !output.stdout.is_empty() {
+                    println!("{}", String::from_utf8_lossy(&output.stdout));
+                }
+
+                if !output.stderr.is_empty() {
+                    eprintln!("{}", String::from_utf8_lossy(&output.stderr));
+                }
+            },
+            Err(e) => {
+                eprintln!("Failed to execute command: {}", e);
+            }
         }
     }
 }
+
 use rand::Rng;
 use std::cmp::max;
 use std::i32::MAX;

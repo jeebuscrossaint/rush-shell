@@ -16,7 +16,9 @@ use rustyline::Context;
 use rustyline::Result;
 use rustyline::Helper;
 
-struct Completions;
+struct Completions {
+    aliases: std::collections::HashMap<String, String>,
+}
 
 impl Completer for Completions {
     type Candidate = Pair;
@@ -51,6 +53,10 @@ impl Helper for Completions {}
 
 
 fn main() {
+    let mut helper = Completions {
+        aliases: std::collections::HashMap::new(),
+    };
+    
     let config = load_config().unwrap_or_else(|err| {
         eprintln!("Error loading config: {}", err);
         std::process::exit(1);
@@ -58,7 +64,7 @@ fn main() {
 
     for cmd in config.init_commands {
         let command = parse(&cmd);
-        execute(command);
+        execute(command, &mut helper.aliases);
     }
 
     let mut rl = Editor::<Completions>::new();
@@ -72,7 +78,7 @@ fn main() {
             Ok(line) => {
                 rl.add_history_entry(line.as_str());
                 let command = parse(&line);
-                execute(command);
+                execute(command, &mut helper.aliases);
             },
             Err(_) => break,
         }
